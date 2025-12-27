@@ -3,16 +3,35 @@
 import { useState } from "react";
 import { QuestionWrapper } from "../inputs";
 
+type AnswerData = {
+    /*  draftId: draft.id,
+        questionId: answer.questionId,
+        value: answer.value,
+        createdAt: new Date(),
+    */
+    draftId: number;
+    questionId: string;
+    value: string;
+    createdAt?: Date;
+}
+
+function formatClientSideAnswers(answers: any) {
+    return Object.fromEntries(answers.map((answer: any) => [answer.questionId, answer]));
+}
+
 export default function Form({ formData }: { formData: any }) {
-    const { title, questions, id } = formData.form;
-    const [answers, setAnswers] = useState(formData?.draft?.answers || {});
+    const { form, draft } = formData;
+    const { title, questions, id } = form;
+    const [answers, setAnswers] = useState(formatClientSideAnswers(draft?.answers || []));
+
+    console.log({ draft, answers });
 
     function handleSubmitDraft(event: React.FormEvent) {
         event.preventDefault();
         // Handle form submission logic here
         const requestData = {
             formId: id,
-            answers: answers,
+            answers,
             userEmail: "emiliofurrer@gmail.com" // Replace with actual user email
         };
         console.log("Submitting draft:", requestData);
@@ -39,7 +58,11 @@ export default function Form({ formData }: { formData: any }) {
         // Handle answer change logic here
         setAnswers((prevAnswers: any) => ({
             ...prevAnswers,
-            [questionId]: value
+            [questionId]: {
+                draftId: draft?.id || "0",
+                questionId: questionId.toString(),
+                value: value,
+            }
         }));
     }
     return (
@@ -48,7 +71,7 @@ export default function Form({ formData }: { formData: any }) {
             <div>
                 {questions.map((question: any, index: number) => (
                     <div key={index}>
-                        <QuestionWrapper questionData={question} position={index + 1} value={answers[question.id] || null} handleChange={handleAnswerChange} />
+                        <QuestionWrapper questionData={question} position={index + 1} value={answers[question.id]?.value || null} handleChange={handleAnswerChange} />
                     </div>
                 ))}
             </div>

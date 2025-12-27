@@ -11,7 +11,7 @@ export default async function FormPage({
 
     return (
         <div>
-            <Form formData={formData} />
+            <Form formData={formData || {}} />
         </div>
     )
 };

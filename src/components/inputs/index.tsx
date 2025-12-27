@@ -8,7 +8,7 @@ type QuestionDto = {
     id: number;
     type: string;
     heading: string;
-    options: Array<QuestionOption>;
+    choices: Array<QuestionOption>;
 }
 
 type QuestionProps = {
@@ -38,7 +38,7 @@ function SingleChoice({ questionData, handleChange, value }: QuestionProps) {
 
     return (
         <div className="flex flex-col gap-2">
-            {questionData.options.map((option,) => (<div key={option.id} className="flex items-center gap-2">
+            {questionData.choices.map((option,) => (<div key={option.id} className="flex items-center gap-2">
                 <input onChange={onChange} type="radio" key={`input ${option.id}`} value={option.value} name={`Question ${questionData.id}`} checked={value === option.value} />
 
                 <label key={`label ${option.id}`}>{option.label}</label>
@@ -64,7 +64,6 @@ function getQuestionComponent(type: string) {
 export function QuestionWrapper({ questionData, position, handleChange, value }: QuestionProps & { position: number }) {
     const QuestionComponent = getQuestionComponent(questionData.type);
     if (!QuestionComponent) return null;
-
     return (
         <div className="py-2">
             <h3>{position}. {questionData.heading}</h3>
