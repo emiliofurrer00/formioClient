@@ -1,3 +1,8 @@
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
+
 type QuestionOption = {
     id: number;
     label: string;
@@ -15,36 +20,40 @@ type QuestionProps = {
     questionData: QuestionDto;
     handleChange: (questionId: number, value: any) => void;
     value?: any;
+    autosavedQuestionId?: number | null;
+    handleAutosave?: (questionId: number, value: string) => void;
 };
 
-function TextField({ questionData, handleChange, value }: QuestionProps) {
+function TextField({ questionData, handleChange, value, handleAutosave }: QuestionProps) {
     function handleValueChange(event: React.ChangeEvent<HTMLInputElement>) {
         handleChange(questionData.id, event.target.value);
     }
-    return <input type="text" className="py-1 px-2 border rounded" onChange={handleValueChange} defaultValue={value}/>;
+    return <Input onBlur={(event) => event.target.value && handleAutosave && handleAutosave(questionData.id, event.target.value)} type="text" className="max-w-xs"onChange={handleValueChange} defaultValue={value}/>;
 }
 
-function TextArea({ questionData, handleChange, value }: QuestionProps) {
+function TextArea({ questionData, handleChange, value, handleAutosave }: QuestionProps) {
     function handleValueChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
         handleChange(questionData.id, event.target.value);
     }
-    return <textarea className="py-1 px-2 border rounded" onChange={handleValueChange} defaultValue={value}/>;
+    return <Textarea onBlur={(event) => event.target.value && handleAutosave && handleAutosave(questionData.id, event.target.value)} className="max-w-md" onChange={handleValueChange} defaultValue={value}/>;
 }
 
-function SingleChoice({ questionData, handleChange, value }: QuestionProps) {
-    const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+function SingleChoice({ questionData, handleChange, value, handleAutosave }: QuestionProps) {
+    const onChange = (event: any) => {
+        console.log("SingleChoice onChange", event.target.value);
         questionData && event.target.value && handleChange(questionData.id, event.target.value);
+        event.target.value && handleAutosave && handleAutosave(questionData.id, event.target.value)
     };
 
     return (
-        <div className="flex flex-col gap-2">
-            {questionData.choices.map((option,) => (<div key={option.id} className="flex items-center gap-2">
-                <input onChange={onChange} type="radio" key={`input ${option.id}`} value={option.value} name={`Question ${questionData.id}`} checked={value === option.value} />
-
-                <label key={`label ${option.id}`}>{option.label}</label>
-            </div>
+        <RadioGroup className="flex flex-col gap-3 py-2">
+            {questionData.choices.map((option,) => (
+                  <div className="flex items-center space-x-2" key={option.id}>
+                    <RadioGroupItem value={option.value} id={`option-${option.id}`} onClick={() => onChange({ target: { value: option.value } })} checked={value === option.value}/>
+                    <Label htmlFor={`option-${option.id}`}>{option.label}</Label>
+                </div>
             ))}
-        </div>
+        </RadioGroup >
     );
 }
 
@@ -61,13 +70,17 @@ function getQuestionComponent(type: string) {
     }
 }
 
-export function QuestionWrapper({ questionData, position, handleChange, value }: QuestionProps & { position: number }) {
+export function QuestionWrapper({ questionData, position, handleChange, value, autosavedQuestionId, handleAutosave }: QuestionProps & { position: number }) {
     const QuestionComponent = getQuestionComponent(questionData.type);
     if (!QuestionComponent) return null;
+    console.log({ autosavedQuestionId, questionId: questionData.id });
     return (
         <div className="py-2">
-            <h3>{position}. {questionData.heading}</h3>
-            <QuestionComponent questionData={questionData} handleChange={handleChange} value={value} />
+            <div className="flex gap-2">
+                <h3>{position}. {questionData.heading}</h3>
+                {autosavedQuestionId === questionData.id && <span className="text-sm text-gray-500">(Autosaving...)</span>}
+            </div>
+            <QuestionComponent handleAutosave={handleAutosave} questionData={questionData} handleChange={handleChange} value={value} />
         </div>
     )
 };
